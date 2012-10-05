@@ -1,5 +1,5 @@
 require "mechanize"
-require "URI"
+require "uri"
 
 if ARGV.size < 3
   puts "coursera-downloader.rb <username> <password> <course>"
