@@ -29,11 +29,12 @@ content_site.links.each do |link|
   unless (link.uri.to_s =~ URI::regexp).nil?
     uri = link.uri.to_s
     filename = ""
-    if (uri =~ /\.mp4/) || (uri =~ /srt/) || (uri =~ /\.pdf/) || (uri =~ /\.pptx/)
+    if (uri =~ /\.mp4/) || (uri =~ /srt/) || (uri =~ /\.pptx/) || (uri =~ /\.pdf/)
      begin
        head = agent.head(uri)
      rescue Mechanize::ResponseCodeError => exception
        if exception.response_code == '403'
+         # strip off extraneous parts of the filename... on some courses, this seems to be an issue
          filename = URI.decode(exception.page.filename).gsub(/.*filename=\"(.*)\"+?.*/, '\1')
        else
          raise exception # Some other error, re-raise
@@ -47,9 +48,12 @@ content_site.links.each do |link|
        p "Skipping #{filename} as it already exists"
       else
        p "Downloading #{uri} to #{filename}..."
-       gotten = agent.get(uri)
-       gotten.save(filename)
-       p "Finished"
+       begin
+         gotten = agent.get(uri)
+         gotten.save(filename)
+       rescue Mechanize::ResponseCodeError => exception
+	 p "Skipping... got a 403 on #{filename}"
+       end
       end
     end
   end
